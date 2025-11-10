@@ -13,6 +13,341 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This repository is currently in the documentation/planning phase. The `docs/` directory contains architectural specifications and implementation plans. No code has been implemented yet.
 
+## Expert Review Agents (Mandatory Consultation)
+
+**CRITICAL**: This project uses specialized read-only expert agents that MUST be consulted at specific points in the development workflow. These agents provide reviews, critiques, and recommendations but do not write code directly.
+
+### Agent 1: CI/CD Expert
+
+**Role**: GitHub Actions and CI/CD Pipeline Specialist
+
+**Expertise**:
+- GitHub Actions workflow optimization
+- Multi-stage pipeline design (lint, test, build, deploy)
+- Caching strategies for faster builds
+- Matrix builds for multi-platform testing
+- Security best practices in CI/CD
+- Secrets management
+- Artifact handling and versioning
+- Performance optimization (parallel jobs, job dependencies)
+- Cost optimization (avoiding unnecessary runs)
+
+**When to Consult** (MANDATORY):
+- Before creating or modifying any `.github/workflows/*.yml` file
+- When designing the CI/CD strategy
+- After implementing new test types (to integrate into pipeline)
+- When pipeline runs are slow or inefficient
+- Before adding new deployment steps
+- When implementing caching strategies
+- When setting up automated releases
+
+**Review Checklist**:
+- Pipeline efficiency and run time
+- Proper job dependencies and parallelization
+- Caching strategy (Go modules, build artifacts)
+- Security scanning integration
+- Test result reporting
+- Code coverage reporting and enforcement
+- Branch protection alignment
+- Deployment strategies (staging, production)
+- Rollback capabilities
+
+**Consultation Format**:
+```
+Use Task tool with prompt:
+"Act as a CI/CD expert. Review the following GitHub Actions workflow
+and provide critique on: efficiency, best practices, security, caching,
+parallelization, and cost optimization. Suggest specific improvements.
+
+[paste workflow content or describe planned pipeline]"
+```
+
+### Agent 2: Test Automation Expert
+
+**Role**: Test Architecture and Automation Specialist (Uncle Bob's Test Standards)
+
+**Expertise**:
+- Test architecture and organization (F.I.R.S.T principles)
+- Test maintainability and refactoring
+- Test smells and anti-patterns
+- Mocking strategies and dependency injection
+- Test fixture management
+- Integration test design
+- E2E test reliability
+- Performance test methodology
+- Test data management
+- Test coverage quality (not just quantity)
+
+**When to Consult** (MANDATORY):
+- Before writing any test suite (unit, integration, e2e, performance)
+- When tests become difficult to maintain
+- When test coverage is high but quality is questionable
+- When tests are flaky or slow
+- Before implementing mocking strategies
+- When designing test data fixtures
+- When tests smell (tight coupling, brittle tests, etc.)
+- During test refactoring sessions
+
+**Review Checklist**:
+- Test follows F.I.R.S.T principles (Fast, Independent, Repeatable, Self-validating, Timely)
+- Tests are readable and maintainable
+- Proper use of table-driven tests
+- Appropriate mocking (not over-mocked, not under-mocked)
+- Test naming conventions (clear, descriptive)
+- Test organization and structure
+- DRY violations in tests
+- Test fixtures and helpers properly organized
+- Tests verify behavior, not implementation
+- Edge cases and error paths covered
+
+**F.I.R.S.T Principles**:
+- **Fast**: Tests run quickly (<100ms for unit tests)
+- **Independent**: Tests don't depend on each other
+- **Repeatable**: Same results every time, any environment
+- **Self-validating**: Pass or fail, no manual interpretation
+- **Timely**: Written before or with the code (TDD)
+
+**Consultation Format**:
+```
+Use Task tool with prompt:
+"Act as a test automation expert following Uncle Bob's principles.
+Review the following test architecture/implementation:
+
+[describe test structure or paste test code]
+
+Critique:
+1. F.I.R.S.T principles compliance
+2. Maintainability and readability
+3. Test architecture and organization
+4. Mocking strategy appropriateness
+5. Test smells and anti-patterns
+6. Suggest architectural refactoring if needed"
+```
+
+### Agent 3: Clean Code Expert (Uncle Bob Standards)
+
+**Role**: Code Quality and Clean Code Principles Enforcer
+
+**Expertise**:
+- SOLID principles
+- Clean code principles (naming, functions, comments, formatting)
+- Code smells detection
+- Refactoring techniques
+- Design patterns (appropriate usage)
+- Separation of concerns
+- Dependency management
+- Error handling patterns
+- Code readability and expressiveness
+- Function/method size and complexity
+
+**When to Consult** (MANDATORY):
+- After implementing any component (before marking as complete)
+- During refactoring phase of TDD cycle
+- When code feels "smelly" or complex
+- Before code review/PR submission
+- When function exceeds 20 lines
+- When cyclomatic complexity is high
+- When considering design pattern usage
+- When architecting new components
+
+**Review Checklist (Uncle Bob's Standards)**:
+- **Naming**: Intention-revealing, pronounceable, searchable
+- **Functions**: Small (< 20 lines), do one thing, one level of abstraction
+- **Comments**: Code is self-documenting, comments explain "why" not "what"
+- **Formatting**: Consistent, vertical openness, proper indentation
+- **Error Handling**: Don't return null, use error types, handle at appropriate level
+- **SOLID Principles**:
+  - Single Responsibility: Each function/struct has one reason to change
+  - Open/Closed: Open for extension, closed for modification
+  - Liskov Substitution: Subtypes must be substitutable for their base types
+  - Interface Segregation: Many small interfaces over one large interface
+  - Dependency Inversion: Depend on abstractions, not concretions
+- **Code Smells**: Long functions, large structs, duplicated code, inappropriate intimacy
+- **Go-Specific**: Proper error handling, effective use of interfaces, idiomatic Go
+
+**Consultation Format**:
+```
+Use Task tool with prompt:
+"Act as Uncle Bob (Robert C. Martin). Review this code with your
+strictest clean code standards:
+
+[paste code or describe component]
+
+Provide critique on:
+1. SOLID principles violations
+2. Code smells and anti-patterns
+3. Function size and complexity
+4. Naming quality
+5. Comments (necessary vs unnecessary)
+6. Error handling patterns
+7. Design pattern usage
+8. Specific refactoring recommendations"
+```
+
+## Expert Agent Integration Workflow
+
+### TDD Cycle with Expert Consultation
+
+```
+┌─────────────────────────────────────────────────────┐
+│  1. PLAN (Task: Plan Agent)                         │
+│     - Design component with test strategy            │
+│     ↓                                                 │
+│  2. CONSULT: Test Automation Expert                  │
+│     - Review test architecture before implementation │
+│     ↓                                                 │
+│  3. RED: Write Failing Test                          │
+│     ↓                                                 │
+│  4. GREEN: Implement Minimal Code                    │
+│     ↓                                                 │
+│  5. CONSULT: Clean Code Expert                       │
+│     - Review implementation for code smells          │
+│     ↓                                                 │
+│  6. REFACTOR: Improve Based on Expert Feedback       │
+│     ↓                                                 │
+│  7. Verify Tests Still Pass                          │
+│     ↓                                                 │
+│  8. REPEAT for next feature                          │
+└─────────────────────────────────────────────────────┘
+```
+
+### CI/CD Setup with Expert Consultation
+
+```
+┌─────────────────────────────────────────────────────┐
+│  1. Design CI/CD Pipeline (document requirements)    │
+│     ↓                                                 │
+│  2. CONSULT: CI/CD Expert                            │
+│     - Review pipeline design                         │
+│     - Get optimization recommendations               │
+│     ↓                                                 │
+│  3. Implement Workflow                               │
+│     ↓                                                 │
+│  4. CONSULT: CI/CD Expert                            │
+│     - Review implemented workflow                    │
+│     - Verify best practices                          │
+│     ↓                                                 │
+│  5. Test and Optimize                                │
+│     ↓                                                 │
+│  6. CONSULT: CI/CD Expert (if issues found)          │
+└─────────────────────────────────────────────────────┘
+```
+
+### Code Review Checklist (Before PR)
+
+**MANDATORY** - Consult all three experts before submitting PR:
+
+1. **Test Automation Expert**: Review all test code
+2. **Clean Code Expert**: Review all implementation code
+3. **CI/CD Expert**: Verify CI/CD passes and is optimal
+
+## Agent Consultation Examples
+
+### Example 1: Implementing Authentication Module
+
+```bash
+# Step 1: Plan with Test Automation Expert
+Task: "As a test automation expert, review this test architecture
+for SMTP authentication module:
+- TestAuthPlain_ValidCredentials
+- TestAuthPlain_InvalidUsername
+- TestAuthPlain_InvalidPassword
+- TestAuthPlain_EmptyCredentials
+- TestAuthPlain_SQLInjectionAttempt
+- TestAuthPlain_RateLimiting
+
+Suggest architectural improvements and additional test cases."
+
+# Step 2: Implement following TDD
+# (write tests, implement code)
+
+# Step 3: Review with Clean Code Expert
+Task: "Act as Uncle Bob. Review this authentication implementation:
+[paste code]
+Critique SOLID principles, naming, function size, error handling."
+
+# Step 4: Refactor based on feedback
+# Step 5: Verify tests pass
+```
+
+### Example 2: Setting Up CI/CD
+
+```bash
+# Step 1: Consult CI/CD Expert
+Task: "As a CI/CD expert, design an optimal GitHub Actions workflow
+for Go SMTP forwarder with:
+- Linting (golangci-lint)
+- Unit tests (with coverage)
+- Integration tests (with testcontainers)
+- E2E tests
+- Performance tests
+- Security scanning
+- Multi-arch builds (amd64, arm64)
+
+Provide workflow structure with best practices for caching and parallelization."
+
+# Step 2: Implement workflow based on recommendations
+
+# Step 3: Review implementation
+Task: "As a CI/CD expert, review this implemented workflow:
+[paste .github/workflows/ci.yml]
+Critique and suggest optimizations."
+```
+
+### Example 3: Test Refactoring
+
+```bash
+# When tests become hard to maintain
+Task: "As a test automation expert, review these tests:
+[paste test code]
+
+Tests are becoming brittle and hard to maintain. Suggest architectural
+refactoring to improve:
+1. Test fixtures management
+2. Mock setup reduction
+3. DRY violations
+4. Test readability
+5. Test independence"
+```
+
+## Enforcement Rules
+
+### For Claude Code Instances
+
+When working on this project, you MUST:
+
+1. **Always consult appropriate expert before major work**:
+   - Writing test suites → Test Automation Expert
+   - Implementing code → Clean Code Expert
+   - CI/CD work → CI/CD Expert
+
+2. **Use Task tool for consultation** (read-only review):
+   ```
+   Task tool with subagent_type="general-purpose"
+   Prompt includes: "Act as [expert role]..."
+   ```
+
+3. **Document expert feedback** in commit messages when addressing their recommendations
+
+4. **Never skip expert consultation** for the mandatory checkpoints listed above
+
+5. **Re-consult if significant changes** are made after initial review
+
+6. **Before any PR/commit**, verify:
+   - [ ] Test Automation Expert reviewed test architecture
+   - [ ] Clean Code Expert approved implementation
+   - [ ] CI/CD Expert verified pipeline (if CI/CD changes)
+
+### Violation Consequences
+
+If expert consultation is skipped:
+- Code may not meet enterprise standards
+- Tests may become unmaintainable
+- CI/CD may be inefficient or insecure
+- Technical debt will accumulate
+
+**Remember**: These experts prevent technical debt BEFORE it's created.
+
 ## Project Architecture
 
 ### Microservices Infrastructure (docs/architecture.md)
@@ -184,43 +519,164 @@ make clean
 
 ## Implementation Guidelines
 
-### TDD-First Development Workflow
+### TDD-First Development Workflow (With Expert Consultation)
 
-**MANDATORY**: Before writing any production code, follow this workflow:
+**MANDATORY**: Before writing any production code, follow this workflow with expert consultation:
 
-1. **Write Test First** (RED)
+#### Phase 1: Planning & Test Architecture (RED Phase Start)
+
+1. **Consult Test Automation Expert FIRST**
+   ```bash
+   # Use Task tool to consult expert
+   Task: "As a test automation expert following Uncle Bob's principles,
+   review this proposed test architecture for [component name]:
+
+   Planned Tests:
+   - [list test cases]
+
+   Critique: F.I.R.S.T compliance, test organization, mocking strategy,
+   and suggest additional test cases or architectural improvements."
+   ```
+
+2. **Create Test File** (based on expert feedback)
    - Create test file if it doesn't exist (`*_test.go`)
-   - Write a test that describes the behavior you want
-   - Run test and confirm it fails
+   - Implement test structure recommended by expert
 
-2. **Implement Minimal Code** (GREEN)
+3. **Write Failing Test** (RED)
+   - Write test that describes the behavior you want
+   - Run test and confirm it fails for the right reason
+   ```bash
+   go test ./internal/[component]  # Should fail
+   ```
+
+#### Phase 2: Implementation (GREEN Phase)
+
+4. **Implement Minimal Code**
    - Write just enough code to pass the test
-   - Run test and confirm it passes
-   - Commit with message: "feat: [feature] - tests passing"
+   - Focus on making it work, not making it perfect
+   ```bash
+   go test ./internal/[component]  # Should pass
+   ```
 
-3. **Refactor** (REFACTOR)
-   - Improve code quality, structure, performance
-   - Run tests to ensure they still pass
-   - Commit with message: "refactor: [description]"
+5. **Verify Tests Pass**
+   ```bash
+   go test -v -race ./internal/[component]
+   go test -cover ./internal/[component]
+   ```
 
-4. **Repeat** for next feature/behavior
+#### Phase 3: Review & Refactor (REFACTOR Phase)
 
-**Example TDD Session**:
+6. **Consult Clean Code Expert**
+   ```bash
+   Task: "Act as Uncle Bob. Review this implementation with strictest
+   clean code standards:
+
+   [paste implementation code]
+
+   Critique: SOLID principles, code smells, function size, naming,
+   error handling, and provide specific refactoring recommendations."
+   ```
+
+7. **Refactor Based on Expert Feedback**
+   - Address all code smells and violations
+   - Improve naming, structure, complexity
+   - Apply SOLID principles
+   ```bash
+   go test ./internal/[component]  # Must still pass
+   ```
+
+8. **Final Verification**
+   ```bash
+   # Run all tests
+   go test -v -race ./...
+
+   # Check coverage
+   go test -coverprofile=coverage.out ./...
+   go tool cover -func=coverage.out
+
+   # Lint and format
+   go fmt ./...
+   golangci-lint run
+   ```
+
+9. **Commit with Expert Feedback Noted**
+   ```bash
+   git commit -m "feat: [component] - implement [feature]
+
+   - Implemented following TDD methodology
+   - Test Automation Expert: [key recommendations applied]
+   - Clean Code Expert: [key refactorings applied]
+   - Coverage: X%
+   - All tests passing with race detector"
+   ```
+
+#### Phase 4: Repeat
+
+10. **Iterate for Next Feature**
+    - Return to Phase 1 for next behavior/feature
+    - Build incrementally with continuous expert review
+
+**Complete TDD Example Session with Experts**:
 ```bash
-# 1. Write test
+# ============================================
+# PHASE 1: PLANNING & TEST ARCHITECTURE
+# ============================================
+
+# Step 1: Consult Test Automation Expert
+# (Use Task tool with expert consultation prompt)
+
+# Step 2: Create test file based on expert feedback
+touch internal/auth/auth_test.go
+
+# Step 3: Write failing test (RED)
 vim internal/auth/auth_test.go
-go test ./internal/auth  # Should fail
+# Write: TestAuthPlain_ValidCredentials
+go test ./internal/auth  # Should fail ❌
 
-# 2. Implement
+# ============================================
+# PHASE 2: IMPLEMENTATION
+# ============================================
+
+# Step 4: Implement minimal code (GREEN)
 vim internal/auth/auth.go
-go test ./internal/auth  # Should pass
+go test ./internal/auth  # Should pass ✅
 
-# 3. Refactor
-vim internal/auth/auth.go
-go test ./internal/auth  # Should still pass
-
-# 4. Check coverage
+# Step 5: Verify
+go test -v -race ./internal/auth
 go test -cover ./internal/auth
+
+# ============================================
+# PHASE 3: REVIEW & REFACTOR
+# ============================================
+
+# Step 6: Consult Clean Code Expert
+# (Use Task tool with expert consultation prompt)
+
+# Step 7: Refactor based on feedback
+vim internal/auth/auth.go
+# Apply: Better naming, extract functions, reduce complexity
+go test ./internal/auth  # Must still pass ✅
+
+# Step 8: Final verification
+go test -v -race ./...
+go test -coverprofile=coverage.out ./...
+go tool cover -func=coverage.out
+golangci-lint run
+
+# Step 9: Commit
+git add .
+git commit -m "feat(auth): implement plain authentication
+
+- Implemented ValidCredentials validation using TDD
+- Test Automation Expert: Added edge cases for empty credentials
+- Clean Code Expert: Extracted validateCredentials(), improved naming
+- Coverage: 92%
+- All tests passing with race detector"
+
+# ============================================
+# PHASE 4: REPEAT
+# ============================================
+# Go back to Phase 1 for next test case (InvalidCredentials)
 ```
 
 ### When Implementing SMTP Forwarder
@@ -607,3 +1063,108 @@ The SMTP Forwarder has a phased development plan:
 - **Milestone 3**: Multiple external servers, spam filtering, header modification, webhooks, REST API
 
 When implementing features, consider the milestone context and maintain compatibility with future enhancements.
+
+---
+
+## Quick Reference: Expert Consultation Triggers
+
+**Use this checklist to know when to consult each expert:**
+
+### 🧪 Test Automation Expert - Consult When:
+- [ ] Planning any new test suite (unit/integration/e2e/performance)
+- [ ] Before writing first test for a component
+- [ ] Tests are becoming hard to maintain
+- [ ] Test coverage is high but tests feel brittle
+- [ ] Implementing mocking strategy
+- [ ] Tests are flaky or slow
+- [ ] During test refactoring
+- [ ] Test architecture needs review
+
+**Quick Prompt**:
+```
+Task: "As a test automation expert following Uncle Bob's principles,
+review [describe test scenario]. Critique F.I.R.S.T compliance,
+maintainability, architecture, and suggest improvements."
+```
+
+### 🎯 Clean Code Expert - Consult When:
+- [ ] After implementing any component (before marking complete)
+- [ ] During REFACTOR phase of TDD cycle
+- [ ] Function exceeds 20 lines
+- [ ] Code feels complex or "smelly"
+- [ ] Before submitting PR
+- [ ] Considering design pattern usage
+- [ ] Architecting new components
+- [ ] High cyclomatic complexity detected
+
+**Quick Prompt**:
+```
+Task: "Act as Uncle Bob. Review this code with strictest clean code
+standards: [paste code]. Critique SOLID, code smells, naming, function
+size, and provide refactoring recommendations."
+```
+
+### 🚀 CI/CD Expert - Consult When:
+- [ ] Creating any `.github/workflows/*.yml` file
+- [ ] Modifying existing workflows
+- [ ] Adding new test types to pipeline
+- [ ] Pipeline runs are slow
+- [ ] Before adding deployment steps
+- [ ] Implementing caching strategy
+- [ ] Setting up automated releases
+- [ ] Pipeline efficiency needs improvement
+
+**Quick Prompt**:
+```
+Task: "As a CI/CD expert, review this GitHub Actions workflow:
+[paste workflow or describe plan]. Critique efficiency, best practices,
+security, caching, parallelization, and suggest improvements."
+```
+
+---
+
+## Pre-Commit Checklist
+
+Before committing ANY code, verify:
+
+- [ ] **TDD Followed**: Tests written before implementation
+- [ ] **Test Automation Expert**: Consulted for test architecture
+- [ ] **Clean Code Expert**: Consulted for implementation review
+- [ ] **All Tests Pass**: `go test -v -race ./...`
+- [ ] **Coverage Met**: `>80%` overall, `>85%` for units
+- [ ] **Linting Clean**: `golangci-lint run`
+- [ ] **Formatted**: `go fmt ./...`
+- [ ] **Race Detector**: No race conditions found
+- [ ] **Security Scan**: `gosec ./...` passed
+
+---
+
+## Pre-PR Checklist
+
+Before submitting Pull Request:
+
+- [ ] **All Pre-Commit Checks**: Passed
+- [ ] **CI/CD Expert**: Consulted if workflow changes
+- [ ] **Integration Tests**: All passing
+- [ ] **E2E Tests**: All passing
+- [ ] **Performance Tests**: No regressions
+- [ ] **Documentation**: Updated if needed
+- [ ] **Commit Messages**: Include expert feedback notes
+- [ ] **Branch Name**: Descriptive (feature/component-name, fix/issue-description)
+- [ ] **PR Description**: Clear description of changes and expert consultations
+
+---
+
+## Git and Development Practices
+
+- **Always use GitHub CLI** instead of plain git commands for GitHub operations
+- **Use descriptive branch names**: `feature/smtp-authentication`, `fix/tls-handshake-error`, `test/integration-auth`
+- **Commit message format**:
+  ```
+  type(scope): brief description
+
+  - Detailed changes
+  - Expert consultation notes
+  - Coverage metrics
+  ```
+  Types: `feat`, `fix`, `test`, `refactor`, `docs`, `chore`, `perf`
